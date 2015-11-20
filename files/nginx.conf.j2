@@ -1,0 +1,24 @@
+user www-data;
+worker_processes 4;
+pid /var/run/nginx.pid;
+
+events {
+	worker_connections 768;
+	# multi_accept on;
+}
+
+http {
+    upstream lb {
+{% for host in groups['webservers'] %}
+    	server {{ hostvars[host]['ansible_eth1']['ipv4']['address'] }};
+{% endfor %}
+    }
+
+    server {
+        listen 80;
+
+        location / {
+            proxy_pass http://lb/;
+        }
+    }
+}
